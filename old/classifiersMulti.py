@@ -3,6 +3,7 @@
 
 import copy
 import datetime
+import graphviz
 import logging
 import numpy as np
 import os
@@ -42,7 +43,6 @@ from sklearn.svm import SVC
 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import ExtraTreeClassifier
-from sklearn.neural_network import MLPClassifier
 
 # used for normalization
 from sklearn.preprocessing import  Normalizer
@@ -51,14 +51,14 @@ from sklearn.preprocessing import MinMaxScaler
 # used for cross-validation
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_curve, auc
-from numpy import interp
+from scipy import interp
 import matplotlib.pyplot as plt
+# this is an incredibly useful function
 from pandas import read_csv
 
 from statsmodels.multivariate.manova import MANOVA
 import statsmodels.api as sm
 from scipy import stats
-from sklearn.metrics import f1_score
 def loadDataset() :
 	
 	# data used for the predictions
@@ -68,10 +68,10 @@ def loadDataset() :
 	return dfData.values, dfLabels.values.ravel() # to have it in the format that the classifiers like
 
 
-def runFeatureReduce(numberOfFolds) :
+def runFeatureReduce() :
 	
 	# a few hard-coded values
-	#numberOfFolds = 10
+	numberOfFolds = 10
 	
 	# list of classifiers, selected on the basis of our previous paper "
 	classifierList = [
@@ -126,12 +126,7 @@ def runFeatureReduce(numberOfFolds) :
 			# tree
 			#[DecisionTreeClassifier(), "DecisionTreeClassifier"],
 			#[ExtraTreeClassifier(), "ExtraTreeClassifier"],
-			[AdaBoostClassifier(n_estimators=300), "AdaBoostClassifier(n_estimators=300)"],
-            [ExtraTreesClassifier(n_estimators=300), "ExtraTreesClassifier(n_estimators=300)"],
-            [KNeighborsClassifier(), "KNeighborsClassifier"],
-            #[LassoCV(), "LassoCV"],
-			[MLPClassifier(), "MLPClassifier"],
-			[LassoCV(), "LassoCV"]
+
 			]
 	
 	# this is just a hack to check a few things
@@ -165,7 +160,6 @@ def runFeatureReduce(numberOfFolds) :
 		
 		print("\nClassifier " + classifierName)
 		classifierPerformance = []
-		F1score= []
 
 		cMatrix=np.zeros((labels, labels))
 		# iterate over all folds
@@ -200,21 +194,16 @@ def runFeatureReduce(numberOfFolds) :
 			yNew.append(y_new)
 			yTest.append(y_test)
 			
-			
 			for i in range(0,len(y_new)):
-				cMatrix[y_test[i]][round(y_new[i])]+=1
-				y_new[i]=round(y_new[i])
+				cMatrix[y_test[i]][y_new[i]]+=1
+
 
 			print("\ttraining: %.4f, test: %.4f" % (scoreTraining, scoreTest))
 			classifierPerformance.append( scoreTest )
-			
-	
-			F1scoreTest = f1_score(y_test, y_new, average='weighted')
-			F1score.append(F1scoreTest)
 
 		pd.DataFrame(cMatrix).to_csv("./best/cMatrix"+str(classifierIndex)+".csv", header=None, index =None)
 		classifierIndex+=1
-		line ="%s \t %.4f \t %.4f \t %.4f \t %.4f\n" % (classifierName, np.mean(classifierPerformance), np.std(classifierPerformance), np.mean(F1score), np.std(F1score))
+		line ="%s \t %.4f \t %.4f \n" % (classifierName, np.mean(classifierPerformance), np.std(classifierPerformance))
 		
 		
 		print(line)
@@ -225,4 +214,4 @@ def runFeatureReduce(numberOfFolds) :
 	return
 
 if __name__ == "__main__" :
-	sys.exit( runFeatureReduce(10) )
+	sys.exit( runFeatureReduce() )

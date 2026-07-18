@@ -1,18 +1,31 @@
 # Script that makes use of more advanced feature selection techniques
 # by Alberto Tonda, 2017
 
+import copy
+import datetime
+import graphviz
+import logging
 import numpy as np
 import os
 import sys
 import pandas as pd 
+import collections
 
 from classifiersMulti import *
 
+# used for normalization
+from sklearn.preprocessing import  Normalizer
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
+# used for cross-validation
+from sklearn.model_selection import StratifiedKFold
 
+# this is an incredibly useful function
 from pandas import read_csv
+import matplotlib.pyplot as plt
 
 directory="data"
-numberOfFolds=10
+
 def fakeBootStrapper():
 	# create folder
 	folderName ="./best/"
@@ -107,14 +120,14 @@ def fakeBootStrapper():
 	
 	# data used for the predictions
 	dfData = read_csv("./run"+str(runBest)+"/data_"+str(indexBest)+".csv", header=None, sep=',')
-	dfLabels = read_csv("./run"+str(runBest)+"/labels.csv", header=None)
+	dfLabels = read_csv("./run"+str(runBest)+"/labels_0.csv", header=None)
 	biomarkers = read_csv("./run"+str(runBest)+"/features_"+str(indexBest)+".csv", header=None)
 	
 	pd.DataFrame(dfData.values).to_csv("./best/data_0.csv", header=None, index =None)
 	pd.DataFrame(biomarkers.values.ravel()).to_csv("./best/features_0.csv", header=None, index =None)
 	pd.DataFrame(dfLabels.values.ravel()).to_csv("./best/labels.csv", header=None, index =None)
 	
-	runFeatureReduce(numberOfFolds)
+	runFeatureReduce()
 	sys.stdout = orig_stdout
 	f.close()
 	return

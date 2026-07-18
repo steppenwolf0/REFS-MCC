@@ -3,6 +3,7 @@
 
 import copy
 import datetime
+import graphviz
 import logging
 import numpy as np
 import os
@@ -48,32 +49,35 @@ from sklearn.preprocessing import StandardScaler
 # used for cross-validation
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import matthews_corrcoef
-
+# this is an incredibly useful function
 from pandas import read_csv
 import pandas as pd 
-
 def loadDatasetOriginal(run) :
 	
 	# data used for the predictions
 	dfData = read_csv("../data/data_0.csv", header=None, sep=',')
-	dfLabels = read_csv("../data/labels.csv", header=None)
+	dfLabels = read_csv("../data/labels_0.csv", header=None)
 	biomarkers = read_csv("../data/features_0.csv", header=None)
 
 	# create folder
 	folderName ="./run"+str(run)+"/"
 	if not os.path.exists(folderName) : os.makedirs(folderName)
+	
+	X=dfData.values
+	y=dfLabels.values.ravel()
 
-	pd.DataFrame(dfData.values).to_csv("./run"+str(run)+"/data_0.csv", header=None, index =None)
+
+	pd.DataFrame(X).to_csv("./run"+str(run)+"/data_0.csv", header=None, index =None)
 	pd.DataFrame(biomarkers.values.ravel()).to_csv("./run"+str(run)+"/features_0.csv", header=None, index =None)
-	pd.DataFrame(dfLabels.values.ravel()).to_csv("./run"+str(run)+"/labels.csv", header=None, index =None)
-	return dfData.values, dfLabels.values.ravel(), biomarkers.values.ravel() # to have it in the format that the classifiers like
+	pd.DataFrame(y).to_csv("./run"+str(run)+"/labels_0.csv", header=None, index =None)
+	return X, y, biomarkers.values.ravel() # to have it in the format that the classifiers like
 
 
 def loadDataset(globalIndex, run) :
 	
 	# data used for the predictions
 	dfData = read_csv("./run"+str(run)+"/data_"+str(globalIndex)+".csv", header=None, sep=',')
-	dfLabels = read_csv("./run"+str(run)+"/labels.csv", header=None)
+	dfLabels = read_csv("./run"+str(run)+"/labels_0.csv", header=None)
 	biomarkers = read_csv("./run"+str(run)+"/features_"+str(globalIndex)+".csv", header=None)
 
 	return dfData.values, dfLabels.values.ravel(), biomarkers.values.ravel() # to have it in the format that the classifiers like
@@ -177,8 +181,13 @@ def relativeFeatureImportance(classifier) :
 
 	return np.array(orderedFeatures)
 
-def featureSelection(globalIndex, variableSize,run, numberOfFolds) :
+def featureSelection(globalIndex, variableSize,run) :
 	
+	# a few hard-coded values
+	numberOfFolds = 10
+	
+	
+	# list of classifiers, selected on the basis of our previous paper "
 	classifierList = [
 			# ensemble
 			#[AdaBoostClassifier(), "AdaBoostClassifier"],
@@ -351,7 +360,6 @@ def featureSelection(globalIndex, variableSize,run, numberOfFolds) :
 			if tempIndex<numberOfTopFeatures:
 				fp.write( str(biomarkerNames[feature]) + "," + str(float(frequency/numberOfFolds)) + "\n")
 			tempIndex=tempIndex+1
-
 	globalAccuracy=globalAccuracy/8
 	return globalAccuracy
 

@@ -23,12 +23,7 @@ import matplotlib.cm
 
 file2 = open('./best/sumA.csv', 'w')
 
-#file2.write("features, run0, run1, run2, run3, run4, run5, run6, run7, run8, run9\n")
-
-k = 10
-
-header = "features, " + ", ".join(f"run{i}" for i in range(k)) + "\n"
-file2.write(header)
+file2.write("features, run0, run1, run2, run3, run4, run5, run6, run7, run8, run9\n")
 
 filepath = './best/sum.csv'
 with open(filepath) as file1:

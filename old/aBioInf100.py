@@ -3,10 +3,10 @@ from reduceData import *
 
 from joblib import Parallel, delayed
 import multiprocessing
+#from runClassifiers import *
 import time
 
 def mainRun(indexRun) :
-	numberOfFolds=10
 	run=indexRun
 	start_time = time.time()
 	globalAnt=0.0
@@ -23,7 +23,7 @@ def mainRun(indexRun) :
 	variableSize=numberOfTopFeatures;
 	while True:
 		globalAnt=globalAccuracy
-		globalAccuracy=featureSelection(globalIndex,variableSize, run,numberOfFolds)
+		globalAccuracy=featureSelection(globalIndex,variableSize, run)
 		print(globalAccuracy)
 		print(globalIndex)
 		print(variableSize)
@@ -41,7 +41,7 @@ def mainRun(indexRun) :
 	return
 
 def main():
-	threads=10
+	threads=5
 	totalRuns=10
 	Parallel(n_jobs=threads, verbose=5, backend="multiprocessing")(delayed(mainRun)(i) for i in range(0,totalRuns))
 	return
