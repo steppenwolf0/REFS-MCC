@@ -7,12 +7,12 @@ Instructions
 
 - From the src folder run the refs-mcc (the default params are: 10 threads, 10 folds and 10 total runs):
 ```bash
-   python refs-mcc.py
+   python refs_mcc.py
 ```
 
 - For the full list of command line args:
 ```bash
-   python refs-mcc.py --help
+   python refs_mcc.py --help
 ```
 
 --------------------------------------------------------------------

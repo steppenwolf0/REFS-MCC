@@ -1,6 +1,5 @@
 import argparse
 import sys
-from timeit import main
 
 from aBioInf100 import main as part1
 from summaryMulti import fakeBootStrapper as part2
