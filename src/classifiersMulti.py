@@ -8,6 +8,7 @@ import numpy as np
 import os
 import sys
 import pandas as pd 
+import argparse
 
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import BaggingClassifier
@@ -69,9 +70,6 @@ def loadDataset() :
 
 
 def runFeatureReduce(numberOfFolds) :
-	
-	# a few hard-coded values
-	#numberOfFolds = 10
 	
 	# list of classifiers, selected on the basis of our previous paper "
 	classifierList = [
@@ -225,4 +223,8 @@ def runFeatureReduce(numberOfFolds) :
 	return
 
 if __name__ == "__main__" :
-	sys.exit( runFeatureReduce(10) )
+	parser = argparse.ArgumentParser(description="Run multiple classifiers based on the best run")
+	parser.add_argument('--folds', type=int, default=10, help='Number of folds (default: 10)')
+	args = parser.parse_args()
+
+	sys.exit( runFeatureReduce(args.folds) )

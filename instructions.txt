@@ -1,3 +1,0 @@
-python aBioInf100.py
-python summaryMulti.py
-python sumFig.py

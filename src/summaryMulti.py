@@ -5,6 +5,7 @@ import numpy as np
 import os
 import sys
 import pandas as pd 
+import argparse
 
 from classifiersMulti import *
 
@@ -12,8 +13,8 @@ from classifiersMulti import *
 from pandas import read_csv
 
 directory="data"
-numberOfFolds=10
-def fakeBootStrapper():
+
+def fakeBootStrapper(runs, numberOfFolds):
 	# create folder
 	folderName ="./best/"
 	if not os.path.exists(folderName) : os.makedirs(folderName)
@@ -22,7 +23,6 @@ def fakeBootStrapper():
 	f = open('./best/out.txt', 'w')
 	sys.stdout = f
 	
-	runs=10
 	directory="run"+str(0)
 	f=open("./"+directory+"/results.txt", "r")
 	fl =f.readlines()
@@ -120,4 +120,12 @@ def fakeBootStrapper():
 	return
 
 if __name__ == "__main__" :
-	sys.exit( fakeBootStrapper() )
+	parser = argparse.ArgumentParser(description="Run REFS-MCC - part 2")
+	parser.add_argument('--totalRuns', type=int, default=10, help='Total number of runs (default: 10)')
+	parser.add_argument('--folds', type=int, default=10, help='Number of folds (default: 10)')
+	args = parser.parse_args()
+
+	runs=args.totalRuns
+	numberOfFolds=args.folds
+
+	sys.exit( fakeBootStrapper(runs, numberOfFolds) )
