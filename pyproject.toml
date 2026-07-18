@@ -1,8 +1,8 @@
 [project]
 name = "refs-mcc"
-version = "0.2.0"
+version = "0.2.1"
 description = "Recursive Ensemble Feauture Selection using Matthews Correlation Coefficient"
-keywords = []
+keywords = ["feature-selection", "matthews-correlation-coefficient", "bioinformatics", "machine-learning", "ensemble-learning"]
 readme = "README_PYPI.md"
 requires-python = ">=3.10"
 authors = [ { name = "Alejandro Lopez-Rincon", email = "alejandrolopezrn@gmail.com" } ]
