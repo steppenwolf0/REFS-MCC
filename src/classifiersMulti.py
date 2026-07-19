@@ -1,6 +1,3 @@
-# Script that makes use of more advanced feature selection techniques
-# by Alberto Tonda, 2017
-
 import copy
 import datetime
 import logging

@@ -20,11 +20,11 @@ Or from python code:
     if __name__ == '__main__': 
         REFC_MCC().run()
 ```
-
+ 
 --------------------------------------------------------------------
 Input
 
-`data` folder with 
+Next to the folder where the code is executed from, a `data` folder needs to be present with the following:
 - `data_0.csv`
 - `features_0.csv`
 - `ids.csv`

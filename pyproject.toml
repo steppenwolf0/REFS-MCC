@@ -1,11 +1,16 @@
 [project]
 name = "refs-mcc"
-version = "0.2.1"
+version = "0.2.6"
 description = "Recursive Ensemble Feauture Selection using Matthews Correlation Coefficient"
 keywords = ["feature-selection", "matthews-correlation-coefficient", "bioinformatics", "machine-learning", "ensemble-learning"]
 readme = "README_PYPI.md"
 requires-python = ">=3.10"
-authors = [ { name = "Alejandro Lopez-Rincon", email = "alejandrolopezrn@gmail.com" } ]
+authors = [
+    { name = "Alejandro Lopez-Rincon", email = "alejandrolopezrn@gmail.com" }, 
+    { name = "Alejandro Lopez-Rincon" }, 
+    { name = "Alberto Tonda" },
+    { name = "Brigitta Varga" }
+]
 license = { text = "MIT" }
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -41,7 +46,8 @@ dev = [
 refs-mcc = "refs_mcc:main"
 
 [project.urls]
-GitHub = "https://github.com/steppenwolf0/REFS-MCC"
+source = "https://github.com/steppenwolf0/REFS-MCC/"
+tracker = "https://github.com/steppenwolf0/REFS-MCC/issues"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
