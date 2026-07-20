@@ -5,7 +5,7 @@ from aBioInf100 import main as part1
 from summaryMulti import fakeBootStrapper as part2
 from sumFig import create_summary_figure as part3
 
-class REFC_MCC:
+class REFS_MCC:
     def __init__(self, threads: int = 10, totalRuns: int = 10, numberOfFolds: int = 10):
         self.threads = threads
         self.totalRuns = totalRuns
@@ -23,8 +23,8 @@ def main():
     parser.add_argument('--folds', type=int, default=10, help='Number of folds (default: 10)')
     args = parser.parse_args()
 
-    refc_mcc = REFC_MCC(args.threads, args.totalRuns, args.folds)
-    return refc_mcc.run()
+    refs_mcc = REFS_MCC(args.threads, args.totalRuns, args.folds)
+    return refs_mcc.run()
 
 if __name__ == "__main__":
     sys.exit(main())
