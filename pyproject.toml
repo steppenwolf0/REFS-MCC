@@ -1,0 +1,74 @@
+[project]
+name = "refs-mcc"
+version = "0.2.7"
+description = "Recursive Ensemble Feature Selection using Matthews Correlation Coefficient"
+keywords = ["feature-selection", "matthews-correlation-coefficient", "bioinformatics", "machine-learning", "ensemble-learning"]
+readme = "README_PYPI.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Alejandro Lopez-Rincon", email = "alejandrolopezrn@gmail.com" }, 
+    { name = "Alejandro Lopez-Rincon" }, 
+    { name = "Alberto Tonda" },
+    { name = "Brigitta Varga" }
+]
+license = { text = "MIT" }
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+dependencies = [
+    "joblib>=1.5.3",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.1",
+    "pandas>=2.3.3",
+    "scikit-learn>=1.8.0",
+    "scipy>=1.17.0",
+    "statsmodels>=0.14.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.scripts]
+refs-mcc = "refs_mcc:main"
+
+[project.urls]
+source = "https://github.com/steppenwolf0/REFS-MCC/"
+tracker = "https://github.com/steppenwolf0/REFS-MCC/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+exclude = "\\.venv|\\.git|\\.tox|build|dist"
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203"]
+
+[tool.check-manifest]
+ignore = ["data/*", "old/*"]

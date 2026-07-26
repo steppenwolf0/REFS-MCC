@@ -2,17 +2,31 @@
 Recursive Ensemble Feauture Selection using Matthews Correlation Coefficient
 
 --------------------------------------------------------------------
-Instructions
+Installation
 
-- From the src folder run the refs-mcc (the default parameters are: 10 threads, 10 folds and 10 total runs):
 ```bash
-   python refs_mcc.py
+   pip install refs-mcc
 ```
 
-- For the full list of command line args:
-```bash
-   python refs_mcc.py --help
+After installation it can be used as the following (using the default parameters):
+```python
+    from refs_mcc import REFS_MCC
+    REFS_MCC().run()
 ```
+
+Or from CLI. For more information, run:
+```bash
+   refs-mcc --help
+```
+ 
+--------------------------------------------------------------------
+Input
+
+Next to the folder where the code is executed from, a `data` folder needs to be present with the following files:
+- `data_0.csv`
+- `features_0.csv`
+- `ids.csv`
+- `labels.csv`
 
 --------------------------------------------------------------------
 Output

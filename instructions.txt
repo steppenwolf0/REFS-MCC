@@ -1,4 +1,0 @@
-python bBioInf.py
-python summaryMulti.py
-python sumFig.py
-python testClass.py
