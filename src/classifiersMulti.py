@@ -57,16 +57,17 @@ from statsmodels.multivariate.manova import MANOVA
 import statsmodels.api as sm
 from scipy import stats
 from sklearn.metrics import f1_score
-def loadDataset() :
+
+def loadDataset(output) :
 	
 	# data used for the predictions
-	dfData = read_csv("./best/data_0.csv", header=None, sep=',')
-	dfLabels = read_csv("./best/labels.csv", header=None)
+	dfData = read_csv(os.path.join(output, "best", "data_0.csv"), header=None, sep=',')
+	dfLabels = read_csv(os.path.join(output, "best", "labels.csv"), header=None)
 		
 	return dfData.values, dfLabels.values.ravel() # to have it in the format that the classifiers like
 
 
-def runFeatureReduce(numberOfFolds) :
+def runFeatureReduce(numberOfFolds, output) :
 	
 	# list of classifiers, selected on the basis of our previous paper "
 	classifierList = [
@@ -135,7 +136,7 @@ def runFeatureReduce(numberOfFolds) :
 	#		]
 
 	print("Loading dataset...")
-	X, y = loadDataset()
+	X, y = loadDataset(output)
 	
 	print(len(X))
 	print(len(X[0]))
@@ -207,13 +208,13 @@ def runFeatureReduce(numberOfFolds) :
 			F1scoreTest = f1_score(y_test, y_new, average='weighted')
 			F1score.append(F1scoreTest)
 
-		pd.DataFrame(cMatrix).to_csv("./best/cMatrix"+str(classifierIndex)+".csv", header=None, index =None)
+		pd.DataFrame(cMatrix).to_csv(os.path.join(output, "best", "cMatrix"+str(classifierIndex)+".csv"), header=None, index =None)
 		classifierIndex+=1
 		line ="%s \t %.4f \t %.4f \t %.4f \t %.4f\n" % (classifierName, np.mean(classifierPerformance), np.std(classifierPerformance), np.mean(F1score), np.std(F1score))
 		
 		
 		print(line)
-		fo = open("./best/results.txt", 'a')
+		fo = open(os.path.join(output, "best", "results.txt"), 'a')
 		fo.write( line )
 		fo.close()
 	
@@ -222,6 +223,7 @@ def runFeatureReduce(numberOfFolds) :
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser(description="Run multiple classifiers based on the best run")
 	parser.add_argument('--folds', type=int, default=10, help='Number of folds (default: 10)')
+	parser.add_argument('--output', type=str, default=".", help='Path to the output folder (default: .)')
 	args = parser.parse_args()
 
-	sys.exit( runFeatureReduce(args.folds) )
+	sys.exit( runFeatureReduce(args.folds, args.output) )

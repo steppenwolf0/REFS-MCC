@@ -6,29 +6,26 @@ import argparse
 
 from classifiersMulti import *
 
-
 from pandas import read_csv
 
-directory="data"
-
-def fakeBootStrapper(runs, numberOfFolds):
+def fakeBootStrapper(runs, numberOfFolds, output = ".") :
 	# create folder
-	folderName ="./best/"
+	folderName = os.path.join(output, "best")
 	if not os.path.exists(folderName) : os.makedirs(folderName)
 
 	orig_stdout = sys.stdout
-	f = open('./best/out.txt', 'w')
+	f = open(os.path.join(output, "best", "out.txt"), 'w')
 	sys.stdout = f
 	
-	directory="run"+str(0)
-	f=open("./"+directory+"/results.txt", "r")
-	fl =f.readlines()
+	directory= f"run{0}"
+	f=open(os.path.join(output, directory, "results.txt"), "r")
+	fl=f.readlines()
 	blocks=int(len(fl)/8)
 	print(blocks)
 	results=np.zeros((blocks,runs+1))
 	for j in range(0,runs):
-		directory="run"+str(j)
-		f=open("./"+directory+"/results.txt", "r")
+		directory= f"run{j}"
+		f=open(os.path.join(output, directory, "results.txt"), "r")
 		fl =f.readlines()
 		blocks=int(len(fl)/8)
 		count=0
@@ -48,14 +45,14 @@ def fakeBootStrapper(runs, numberOfFolds):
 		indexResults=0
 		
 		for i in range (0,blocks):
-			dfFeats = (read_csv("./"+directory+"/features_"+str(i)+".csv", header=None)).values.ravel() 
+			dfFeats = (read_csv(os.path.join(output, directory, f"features_{i}.csv"), header=None)).values.ravel() 
 			variables[i]=len(dfFeats)
 			results[i,j+1]=accuracy[i]
 			results[i,0]=variables[i]
 		
 		
 	
-	pd.DataFrame(results).to_csv("./best/sum.csv", header=None, index =None)
+	pd.DataFrame(results).to_csv(os.path.join(output, "best", "sum.csv"), header=None, index =None)
 	
 	bestVal=np.zeros(runs)
 	bestSize=np.zeros(runs)
@@ -75,13 +72,13 @@ def fakeBootStrapper(runs, numberOfFolds):
 	bestFeatures=[]
 	signatures=[]
 	for j in range(0,runs):
-		dfFeats = (read_csv("./run"+str(j)+"/features_"+str(int(bestPos[j]))+".csv", header=None))
+		dfFeats = (read_csv(os.path.join(output, f"run{j}", f"features_{int(bestPos[j])}.csv"), header=None))
 		bestFeatures.extend(dfFeats.values.ravel())
 		signatures.append(dfFeats.values.ravel())
 	#print(bestFeatures)
 	signatures.append(bestVal)
 	signatures.append(bestSize)
-	pd.DataFrame(signatures).to_csv("./best/signatures.csv", header=None, index =None)
+	pd.DataFrame(signatures).to_csv(os.path.join(output, "best", "signatures.csv"), header=None, index =None)
 	
 	unique, counts = np.unique(bestFeatures, return_counts=True)
 	
@@ -91,7 +88,7 @@ def fakeBootStrapper(runs, numberOfFolds):
 		resultsFeatures[j,1]=counts[j]
 	
 	
-	pd.DataFrame(resultsFeatures).to_csv("./best/resultsFeatures.csv", header=None, index =None)
+	pd.DataFrame(resultsFeatures).to_csv(os.path.join(output, "best", "resultsFeatures.csv"), header=None, index =None)
 	
 	print(np.max(bestVal))
 	print(np.argmax(bestVal))
@@ -103,15 +100,15 @@ def fakeBootStrapper(runs, numberOfFolds):
 	
 	
 	# data used for the predictions
-	dfData = read_csv("./run"+str(runBest)+"/data_"+str(indexBest)+".csv", header=None, sep=',')
-	dfLabels = read_csv("./run"+str(runBest)+"/labels.csv", header=None)
-	biomarkers = read_csv("./run"+str(runBest)+"/features_"+str(indexBest)+".csv", header=None)
+	dfData = read_csv(os.path.join(output, f"run{runBest}", f"data_{indexBest}.csv"), header=None, sep=',')
+	dfLabels = read_csv(os.path.join(output, f"run{runBest}", "labels.csv"), header=None)
+	biomarkers = read_csv(os.path.join(output, f"run{runBest}", f"features_{indexBest}.csv"), header=None)
 	
-	pd.DataFrame(dfData.values).to_csv("./best/data_0.csv", header=None, index =None)
-	pd.DataFrame(biomarkers.values.ravel()).to_csv("./best/features_0.csv", header=None, index =None)
-	pd.DataFrame(dfLabels.values.ravel()).to_csv("./best/labels.csv", header=None, index =None)
+	pd.DataFrame(dfData.values).to_csv(os.path.join(output, "best", "data_0.csv"), header=None, index =None)
+	pd.DataFrame(biomarkers.values.ravel()).to_csv(os.path.join(output, "best", "features_0.csv"), header=None, index =None)
+	pd.DataFrame(dfLabels.values.ravel()).to_csv(os.path.join(output, "best", "labels.csv"), header=None, index =None)
 	
-	runFeatureReduce(numberOfFolds)
+	runFeatureReduce(numberOfFolds, output)
 	sys.stdout = orig_stdout
 	f.close()
 	return
@@ -120,9 +117,11 @@ if __name__ == "__main__" :
 	parser = argparse.ArgumentParser(description="Run REFS-MCC - part 2")
 	parser.add_argument('--totalRuns', type=int, default=10, help='Total number of runs (default: 10)')
 	parser.add_argument('--folds', type=int, default=10, help='Number of folds (default: 10)')
+	parser.add_argument('--output', type=str, default=".", help='Path to the output folder (default: .)')
 	args = parser.parse_args()
 
 	runs=args.totalRuns
 	numberOfFolds=args.folds
+	output=args.output
 
-	sys.exit( fakeBootStrapper(runs, numberOfFolds) )
+	sys.exit( fakeBootStrapper(runs, numberOfFolds, output) )

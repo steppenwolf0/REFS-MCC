@@ -14,6 +14,7 @@ def convert_to_percentage(f) :
         return ""
 
 # script to create a figure
+import os
 import sys
 
 import numpy as np
@@ -22,9 +23,9 @@ import matplotlib as mpl
 import matplotlib.cm
 import argparse
 
-def create_summary_figure(totalRuns):
+def create_summary_figure(totalRuns, output = ".") :
 
-    file2 = open('./best/sumA.csv', 'w')
+    file2 = open(os.path.join(output, "best", "sumA.csv"), 'w')
 
     #file2.write("features, run0, run1, run2, run3, run4, run5, run6, run7, run8, run9\n")
 
@@ -33,7 +34,7 @@ def create_summary_figure(totalRuns):
     header = "features, " + ", ".join(f"run{i}" for i in range(k)) + "\n"
     file2.write(header)
 
-    filepath = './best/sum.csv'
+    filepath = os.path.join(output, "best", "sum.csv")
     with open(filepath) as file1:
         line = file1.readline()
         cnt = 1
@@ -47,11 +48,11 @@ def create_summary_figure(totalRuns):
 
 
 
-    df = pd.read_csv("./best/sumA.csv")
+    df = pd.read_csv(os.path.join(output, "best", "sumA.csv"))
 
     x = df['features'].values
 
-    features=pd.read_csv("./best/features_0.csv", header=None)
+    features=pd.read_csv(os.path.join(output, "best", "features_0.csv"), header=None)
     print("len features:"+str(len(features.values)))
 
     maxValue=len(features.values)
@@ -90,14 +91,16 @@ def create_summary_figure(totalRuns):
     ax.set_xlabel("Number of features (log scale)")
     ax.set_ylabel("Ensemble MCC")
     ax.set_title("MCC vs number of features in REFS runs")
-    plt.savefig("sumFig.pdf")
-    plt.savefig("sumFig.png", dpi=300)
+    plt.savefig(os.path.join(output, "sumFig.pdf"))
+    plt.savefig(os.path.join(output, "sumFig.png"), dpi=300)
 
 if __name__ == "__main__" :
     parser = argparse.ArgumentParser(description="Create summary figure")
     parser.add_argument('--totalRuns', type=int, default=10, help='Total number of runs (default: 10)')
+    parser.add_argument('--output', type=str, default=".", help='Path to the output folder (default: .)')
     args = parser.parse_args()
 
     totalRuns = args.totalRuns
+    output = args.output
 
-    sys.exit( create_summary_figure(totalRuns) )
+    sys.exit( create_summary_figure(totalRuns, output) )

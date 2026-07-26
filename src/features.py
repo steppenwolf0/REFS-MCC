@@ -49,29 +49,29 @@ from sklearn.metrics import matthews_corrcoef
 from pandas import read_csv
 import pandas as pd 
 
-def loadDatasetOriginal(run) :
+def loadDatasetOriginal(run, data, runFolderPath) :
 	
 	# data used for the predictions
-	dfData = read_csv("../data/data_0.csv", header=None, sep=',')
-	dfLabels = read_csv("../data/labels.csv", header=None)
-	biomarkers = read_csv("../data/features_0.csv", header=None)
+	dfData = read_csv(os.path.join(data, "data_0.csv"), header=None, sep=',')
+	dfLabels = read_csv(os.path.join(data, "labels.csv"), header=None)
+	biomarkers = read_csv(os.path.join(data, "features_0.csv"), header=None)
 
 	# create folder
-	folderName ="./run"+str(run)+"/"
+	folderName = os.path.join(runFolderPath, f"run{run}")
 	if not os.path.exists(folderName) : os.makedirs(folderName)
 
-	pd.DataFrame(dfData.values).to_csv("./run"+str(run)+"/data_0.csv", header=None, index =None)
-	pd.DataFrame(biomarkers.values.ravel()).to_csv("./run"+str(run)+"/features_0.csv", header=None, index =None)
-	pd.DataFrame(dfLabels.values.ravel()).to_csv("./run"+str(run)+"/labels.csv", header=None, index =None)
+	pd.DataFrame(dfData.values).to_csv(os.path.join(folderName, "data_0.csv"), header=None, index =None)
+	pd.DataFrame(biomarkers.values.ravel()).to_csv(os.path.join(folderName, "features_0.csv"), header=None, index =None)
+	pd.DataFrame(dfLabels.values.ravel()).to_csv(os.path.join(folderName, "labels.csv"), header=None, index =None)
 	return dfData.values, dfLabels.values.ravel(), biomarkers.values.ravel() # to have it in the format that the classifiers like
 
 
-def loadDataset(globalIndex, run) :
+def loadDataset(globalIndex, run, runFolderPath) :
 	
 	# data used for the predictions
-	dfData = read_csv("./run"+str(run)+"/data_"+str(globalIndex)+".csv", header=None, sep=',')
-	dfLabels = read_csv("./run"+str(run)+"/labels.csv", header=None)
-	biomarkers = read_csv("./run"+str(run)+"/features_"+str(globalIndex)+".csv", header=None)
+	dfData = read_csv(os.path.join(runFolderPath, f"run{run}", f"data_{globalIndex}.csv"), header=None, sep=',')
+	dfLabels = read_csv(os.path.join(runFolderPath, f"run{run}", "labels.csv"), header=None)
+	biomarkers = read_csv(os.path.join(runFolderPath, f"run{run}", f"features_{globalIndex}.csv"), header=None)
 
 	return dfData.values, dfLabels.values.ravel(), biomarkers.values.ravel() # to have it in the format that the classifiers like
 
@@ -174,7 +174,7 @@ def relativeFeatureImportance(classifier) :
 
 	return np.array(orderedFeatures)
 
-def featureSelection(globalIndex, variableSize,run, numberOfFolds) :
+def featureSelection(globalIndex, variableSize,run, numberOfFolds, data, output) :
 	
 	classifierList = [
 			# ensemble
@@ -237,15 +237,15 @@ def featureSelection(globalIndex, variableSize,run, numberOfFolds) :
 
 	print("Loading dataset...")
 	if (globalIndex==0):
-		X, y, biomarkerNames = loadDatasetOriginal(run)
+		X, y, biomarkerNames = loadDatasetOriginal(run, data, output)
 	else:
-		X, y, biomarkerNames = loadDataset(globalIndex, run)
-	
-	
+		X, y, biomarkerNames = loadDataset(globalIndex, run, output)
+
+
 	
 	numberOfTopFeatures=int(variableSize)
 	# create folder
-	folderName ="./run"+str(run)+"/"
+	folderName = os.path.join(output, f"run{run}")
 	if not os.path.exists(folderName) : os.makedirs(folderName)
 	
 	# prepare folds
@@ -318,8 +318,7 @@ def featureSelection(globalIndex, variableSize,run, numberOfFolds) :
 		globalAccuracy=globalAccuracy+np.mean(classifierPerformance)
 		
 		print(line)
-		fileName=folderName+"results.txt"
-		fo = open(fileName, 'a')
+		fo = open(os.path.join(folderName, "results.txt"), 'a')
 		fo.write( line )
 		fo.close()
 		# save most important features for the classifier
