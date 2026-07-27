@@ -197,8 +197,12 @@ def runFeatureReduce(numberOfFolds) :
 			
 			
 			for i in range(0,len(y_new)):
-				cMatrix[y_test[i]][round(y_new[i])]+=1
-				y_new[i]=round(y_new[i])
+				rounded_y_new = round(y_new[i])
+				if (rounded_y_new<0 or rounded_y_new>=labels):
+					rounded_y_new=0 if (rounded_y_new<0) else labels-1
+
+				cMatrix[y_test[i]][rounded_y_new]+=1
+				y_new[i]=rounded_y_new
 
 			print("\ttraining: %.4f, test: %.4f" % (scoreTraining, scoreTest))
 			classifierPerformance.append( scoreTest )
