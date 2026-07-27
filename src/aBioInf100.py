@@ -6,14 +6,14 @@ import multiprocessing
 import time
 import argparse
 
-def mainRun(indexRun, numberOfFolds) :
+def mainRun(indexRun, numberOfFolds, data, output) :
 	run=indexRun
 	start_time = time.time()
 	globalAnt=0.0
 	globalIndex=0
 	globalAccuracy=0.0
 
-	X, y, biomarkerNames = loadDatasetOriginal(run)
+	X, y, biomarkerNames = loadDatasetOriginal(run, data, output)
 	
 	if (int(len(X[0]))>1000):
 		numberOfTopFeatures = 1000
@@ -23,11 +23,11 @@ def mainRun(indexRun, numberOfFolds) :
 	variableSize=numberOfTopFeatures;
 	while True:
 		globalAnt=globalAccuracy
-		globalAccuracy=featureSelection(globalIndex,variableSize, run,numberOfFolds)
+		globalAccuracy=featureSelection(globalIndex,variableSize, run, numberOfFolds, data, output)
 		print(globalAccuracy)
 		print(globalIndex)
 		print(variableSize)
-		size,sizereduced=reduceDataset(globalIndex, run)
+		size,sizereduced=reduceDataset(globalIndex, run, data, output)
 		
 		if(variableSize==0):
 			break
@@ -40,8 +40,8 @@ def mainRun(indexRun, numberOfFolds) :
 	print(elapsed_time)
 	return
 
-def main(threads, totalRuns, numberOfFolds) :
-	Parallel(n_jobs=threads, verbose=5, backend="multiprocessing")(delayed(mainRun)(i, numberOfFolds) for i in range(0,totalRuns))
+def main(threads, totalRuns, numberOfFolds, data, output=".") :
+	Parallel(n_jobs=threads, verbose=5, backend="multiprocessing")(delayed(mainRun)(i, numberOfFolds, data, output) for i in range(0,totalRuns))
 	return
 
 if __name__ == "__main__" :
@@ -49,10 +49,14 @@ if __name__ == "__main__" :
 	parser.add_argument('--threads', type=int, default=10, help='Number of threads (default: 10)')
 	parser.add_argument('--totalRuns', type=int, default=10, help='Total number of runs (default: 10)')
 	parser.add_argument('--folds', type=int, default=10, help='Number of folds (default: 10)')
+	parser.add_argument('--data', type=str, default="../data", help='Path to the data folder (default: ../data)')
+	parser.add_argument('--output', type=str, default=".", help='Path to the output folder (default: .)')
 	args = parser.parse_args()
 
 	threads=args.threads
 	totalRuns=args.totalRuns
 	numberOfFolds=args.folds
+	data=args.data
+	output=args.output
 
-	sys.exit( main(threads, totalRuns, numberOfFolds) )
+	sys.exit( main(threads, totalRuns, numberOfFolds, data, output) )
