@@ -1,0 +1,89 @@
+name: Version and tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (format: X.Y.Z)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  version-and-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate and update version
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must be in X.Y.Z format"
+            exit 1
+          fi
+
+          CURRENT_VERSION=$(grep ^version pyproject.toml | cut -d '"' -f 2)
+
+          if [[ "$VERSION" != "$CURRENT_VERSION" ]]; then
+            IFS='.' read -r -a NEW <<< "$VERSION"
+            IFS='.' read -r -a CUR <<< "$CURRENT_VERSION"
+            for i in 0 1 2; do
+              if (( NEW[i] > CUR[i] )); then
+                break
+              fi
+              if (( NEW[i] < CUR[i] )); then
+                echo "New version must be higher than current version $CURRENT_VERSION"
+                exit 1
+              fi
+            done
+          fi
+
+          OLD_VERSION="\"$CURRENT_VERSION\""
+          NEW_VERSION="\"$VERSION\""
+          sed -i "s+version = $OLD_VERSION+version = $NEW_VERSION+g" pyproject.toml
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag release
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}+github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml
+
+          if git diff --cached --quiet; then
+            echo "No version change detected."
+            exit 1
+          fi
+
+          TAG="v$VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally."
+            exit 1
+          fi
+
+          if git ls-remote --tags origin "$TAG" | grep -q .; then
+            echo "Tag $TAG already exists on remote."
+            exit 1
+          fi
+
+          git commit -m "Version v$VERSION"
+          git tag "$TAG"
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin "$TAG"
