@@ -1,51 +1,31 @@
-import os
-
-from pandas import read_csv
 import numpy as np
 
-import pandas as pd 
 
-def reduceDataset(globalIndex, run, dataFolderPath, output = ".") :
-	
-	# data used for the predictions
-	if(globalIndex==0):
-		dfData = read_csv(os.path.join(dataFolderPath, f"data_{globalIndex}.csv"), header=None, sep=',')
-		ids=read_csv(os.path.join(dataFolderPath, f"features_{globalIndex}.csv"), header=None, sep=',')
-	else:
-		dfData = read_csv(os.path.join(output, f"run{run}", f"data_{globalIndex}.csv"), header=None, sep=',')
-		ids=read_csv(os.path.join(output, f"run{run}", f"features_{globalIndex}.csv"), header=None, sep=',')
-
-	idsRed=read_csv(os.path.join(output, f"run{run}", f"global_{globalIndex}.csv"), sep=',')
-
-	data=dfData.values
-	idsRed=idsRed.values
-	
-	ids=ids.values
-
+def reduceDataset(data: np.ndarray, ids: np.ndarray, idsReduced: np.ndarray):
 	print("data Y %d" %(len(data)))
 	print("data X %d" %(len(data[0])))
 	print(len(ids))
-	print(len(idsRed))
-	
-	tempIds=[]
-	for i in range(0,len(idsRed)):
-		if (idsRed[i,1]>=1):
-			tempIds.append(idsRed[i,0])
-	print(len(tempIds))
+	print(len(idsReduced))
+
+	featuresReduced=[]
+	for i in range(0,len(idsReduced)):
+		feature = idsReduced[i, 0]
+		frequency = idsReduced[i, 1]
+		if float(frequency) >= 1:
+			featuresReduced.append(feature)
+
+	print(len(featuresReduced))
 	count=0
 	
-	dataRed=np.zeros((len(data),len(tempIds)))
+	dataReduced=np.zeros((len(data),len(featuresReduced)))
 
-	for i in range(0,len(tempIds)):
+	for i in range(0,len(featuresReduced)):
 		for j in range (0,len(ids)):
-			if (ids[j]== tempIds[i]):
+			if (ids[j]== featuresReduced[i]):
 				count=count+1
 				for k in range(0,len(data)):
-					dataRed[k,i]=data[k,j]
-	
-	
-	pd.DataFrame(tempIds).to_csv(os.path.join(output, f"run{run}", f"features_{globalIndex+1}.csv"), header=None, index =None)
-	pd.DataFrame(dataRed).to_csv(os.path.join(output, f"run{run}", f"data_{globalIndex+1}.csv"), header=None, index =None)			
+					dataReduced[k,i]=data[k,j]
+			
 	print(count)
 	
-	return len(ids),len(tempIds)
+	return dataReduced, featuresReduced

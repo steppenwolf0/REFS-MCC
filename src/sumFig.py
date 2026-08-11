@@ -23,42 +23,21 @@ import matplotlib as mpl
 import matplotlib.cm
 import argparse
 
-def create_summary_figure(totalRuns, output = ".") :
-
-    file2 = open(os.path.join(output, "best", "sumA.csv"), 'w')
-
-    #file2.write("features, run0, run1, run2, run3, run4, run5, run6, run7, run8, run9\n")
-
+def create_summary_figure(df: pd.DataFrame, features: pd.DataFrame, totalRuns, output = ".", verbose = 1):
     k = totalRuns
 
-    header = "features, " + ", ".join(f"run{i}" for i in range(k)) + "\n"
-    file2.write(header)
+    df.columns = ["features"] + [f"run{i}" for i in range(k)]
 
-    filepath = os.path.join(output, "best", "sum.csv")
-    with open(filepath) as file1:
-        line = file1.readline()
-        cnt = 1
-        while line:
-            #print("Line {}: {}".format(cnt, line.strip()))
-            file2.write(line)
-            line = file1.readline()
-            cnt += 1
-    file1.close()
-    file2.close()
-
-
-
-    df = pd.read_csv(os.path.join(output, "best", "sumA.csv"))
+    if verbose:
+        df.to_csv(os.path.join(output, "best", "sumA.csv"), index=False)
 
     x = df['features'].values
 
-    features=pd.read_csv(os.path.join(output, "best", "features_0.csv"), header=None)
     print("len features:"+str(len(features.values)))
 
     maxValue=len(features.values)
-
-
-    runs = [r for r in list(df) if r != 'features']
+   
+    runs = [r for r in df.columns if r != 'features']
 
     #We declare 15 because numbers 0-5 are almost white.
     n_lines=15
@@ -75,12 +54,14 @@ def create_summary_figure(totalRuns, output = ".") :
 
     #starts in 5 because numbers 0-5 are almost white.
     i=5
-    for r in runs :
+    for r in runs:
         y = df[r].values
         ax.plot(x, y, label=r, c=cmap.to_rgba(i))
         i=i+1
 
-    plt.xticks(x, [str(a) for a in list(x)], rotation=90, fontsize=6)
+    tick_positions = [v for v in x if v > 0]
+    plt.xticks(tick_positions, [str(a) for a in list(tick_positions)], rotation=90, fontsize=6)
+
     y_locs = ax.get_yticks()
     print(y_locs)
     plt.yticks(y_locs, [convert_to_percentage(p) for p in y_locs])
@@ -91,8 +72,13 @@ def create_summary_figure(totalRuns, output = ".") :
     ax.set_xlabel("Number of features (log scale)")
     ax.set_ylabel("Ensemble MCC")
     ax.set_title("MCC vs number of features in REFS runs")
-    plt.savefig(os.path.join(output, "sumFig.pdf"))
-    plt.savefig(os.path.join(output, "sumFig.png"), dpi=300)
+
+    if verbose:
+        plt.savefig(os.path.join(output, "sumFig.pdf"))
+        plt.savefig(os.path.join(output, "sumFig.png"), dpi=300)
+
+    return plt
+    
 
 if __name__ == "__main__" :
     parser = argparse.ArgumentParser(description="Create summary figure")
@@ -103,4 +89,7 @@ if __name__ == "__main__" :
     totalRuns = args.totalRuns
     output = args.output
 
-    sys.exit( create_summary_figure(totalRuns, output) )
+    df = pd.read_csv(os.path.join(output, "best", "sum.csv"), header=None)
+    features=pd.read_csv(os.path.join(output, "best", "features_0.csv"), header=None)
+
+    create_summary_figure(df, features, totalRuns, output)
