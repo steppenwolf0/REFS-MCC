@@ -32,6 +32,10 @@ def mainRun(X: np.ndarray, y: np.ndarray, biomarkerNames: np.ndarray,
 			# create folder
 			if not os.path.exists(folderName) : os.makedirs(folderName)
 
+			if os.path.exists(os.path.join(folderName, "results.txt")):
+				with open(os.path.join(folderName, "results.txt"), 'w') as f:
+					f.truncate(0)
+
 		start_time = time.time()
 		globalIndex=0
 		globalAccuracy=0.0
