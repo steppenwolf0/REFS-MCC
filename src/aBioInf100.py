@@ -57,7 +57,7 @@ def mainRun(X: np.ndarray, y: np.ndarray, biomarkerNames: np.ndarray,
 			globalAccuracy, idsReduced = featureSelection(X, y, biomarkerNames, numberOfTopFeatures, numberOfFolds, classifierList, criterion, verbose, folderName)
 
 			globalAccuracies.append(globalAccuracy)
-			nrFeaturesPerBlock.append(len(idsReduced))
+			nrFeaturesPerBlock.append(len(biomarkerNames)) 
 
 			if (globalAccuracy > bestAccuracy):
 				bestAccuracy=globalAccuracy
