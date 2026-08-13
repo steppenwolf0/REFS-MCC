@@ -9,7 +9,8 @@ authors = [
     { name = "Alejandro Lopez-Rincon", email = "alejandrolopezrn@gmail.com" }, 
     { name = "Alejandro Lopez-Rincon" }, 
     { name = "Alberto Tonda" },
-    { name = "Brigitta Varga" }
+    { name = "Brigitta Varga" },
+    { name = "David Rojas-Velazquez"}
 ]
 license = { text = "MIT" }
 classifiers = [
