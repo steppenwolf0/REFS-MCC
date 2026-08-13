@@ -1,8 +1,19 @@
 name: Publish to PyPi
 
 on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (format: X.Y.Z)"
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -18,8 +29,22 @@ jobs:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
 
     steps:
+      - name: Determine checkout ref
+        id: ref
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+            echo "ref=v${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "ref=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=v${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
