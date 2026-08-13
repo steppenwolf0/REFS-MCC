@@ -1,6 +1,6 @@
 [project]
 name = "refs-mcc"
-version = "1.0.2"
+version = "1.1.0"
 description = "Recursive Ensemble Feature Selection using Matthews Correlation Coefficient"
 keywords = ["feature-selection", "matthews-correlation-coefficient", "bioinformatics", "machine-learning", "ensemble-learning"]
 readme = "README_PYPI.md"
