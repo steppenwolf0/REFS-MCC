@@ -7,6 +7,11 @@ on:
         description: "Version (format: X.Y.Z)"
         required: true
         type: string
+      create_release:
+        description: "Create a GitHub release after tagging"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -87,3 +92,11 @@ jobs:
           git tag "$TAG"
           git push origin HEAD:${{ github.ref_name }}
           git push origin "$TAG"
+
+      - name: Create GitHub release
+        if: ${{ inputs.create_release }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          body: "Automated release for v${{ steps.version.outputs.version }}"
