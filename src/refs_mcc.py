@@ -15,6 +15,16 @@ class REFS_MCC:
         self.output = output
 
     def run(self):
+        """Run the full REFS-MCC pipeline.
+
+        Raises:
+        - SystemExit: exits with code 1 if the `output` folder exists and is
+            not set to the current directory (`.`) to avoid accidental overwrites of previous results.
+
+        Returns:
+        - None
+        """
+
         if self.output != "." and os.path.exists(self.output):
             print(f"Output folder '{self.output}' already exists. Please choose a different folder or remove the existing one.")
             sys.exit(1)
