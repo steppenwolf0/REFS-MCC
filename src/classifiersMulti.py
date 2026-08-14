@@ -13,39 +13,20 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 
-from sklearn.linear_model import ElasticNet
-from sklearn.linear_model import ElasticNetCV
-from sklearn.linear_model import Lasso
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import LogisticRegressionCV
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.linear_model import RidgeClassifier
-from sklearn.linear_model import RidgeClassifierCV
 from sklearn.linear_model import SGDClassifier
 
-from sklearn.multiclass import OneVsOneClassifier 
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.multiclass import OutputCodeClassifier
-
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.naive_bayes import GaussianNB
-from sklearn.naive_bayes import MultinomialNB 
-
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neighbors import NearestCentroid
-from sklearn.neighbors import RadiusNeighborsClassifier
 
 from sklearn.svm import SVC
 
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.tree import ExtraTreeClassifier
 from sklearn.neural_network import MLPClassifier
 
 # used for normalization
-from sklearn.preprocessing import  Normalizer
 from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import MinMaxScaler
 # used for cross-validation
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_curve, auc
@@ -67,11 +48,10 @@ def loadDataset(output) :
 	return dfData.values, dfLabels.values.ravel() # to have it in the format that the classifiers like
 
 
-def runFeatureReduce(numberOfFolds, output) :
-	
-	# list of classifiers, selected on the basis of our previous paper "
-	classifierList = [
-		
+def runFeatureReduce(X, y, numberOfFolds, output, verbose = 1, classifierList = None) :
+
+	if classifierList is None:
+		classifierList = [
 			[GradientBoostingClassifier(n_estimators=300), "GradientBoostingClassifier(n_estimators=300)"],
 			[RandomForestClassifier(n_estimators=300), "RandomForestClassifier(n_estimators=300)"],
 			[LogisticRegression(solver='lbfgs',), "LogisticRegression"],
@@ -80,69 +60,15 @@ def runFeatureReduce(numberOfFolds, output) :
 			[SVC(kernel='linear'), "SVC(linear)"],
 			[RidgeClassifier(), "RidgeClassifier"],
 			[BaggingClassifier(n_estimators=300), "BaggingClassifier(n_estimators=300)"],
-			# ensemble
-			#[AdaBoostClassifier(), "AdaBoostClassifier"],
-			#[AdaBoostClassifier(n_estimators=300), "AdaBoostClassifier(n_estimators=300)"],
-			#[AdaBoostClassifier(n_estimators=1500), "AdaBoostClassifier(n_estimators=1500)"],
-			#[BaggingClassifier(), "BaggingClassifier"],
-			
-			#[ExtraTreesClassifier(), "ExtraTreesClassifier"],
-			#[ExtraTreesClassifier(n_estimators=300), "ExtraTreesClassifier(n_estimators=300)"],
-			 # features_importances_
-			#[GradientBoostingClassifier(n_estimators=300), "GradientBoostingClassifier(n_estimators=300)"],
-			#[GradientBoostingClassifier(n_estimators=1000), "GradientBoostingClassifier(n_estimators=1000)"],
-			
-			#[RandomForestClassifier(n_estimators=300), "RandomForestClassifier(n_estimators=300)"],
-			#[RandomForestClassifier(n_estimators=1000), "RandomForestClassifier(n_estimators=1000)"], # features_importances_
 
-			# linear
-			#[ElasticNet(), "ElasticNet"],
-			#[ElasticNetCV(), "ElasticNetCV"],
-			#[Lasso(), "Lasso"],
-			#[LassoCV(), "LassoCV"],
-			 # coef_
-			#[LogisticRegressionCV(), "LogisticRegressionCV"],
-			  # coef_
-			 # coef_
-			#[RidgeClassifierCV(), "RidgeClassifierCV"],
-			 # coef_
-			 # coef_, but only if the kernel is linear...the default is 'rbf', which is NOT linear
-			
-			# naive Bayes
-			#[BernoulliNB(), "BernoulliNB"],
-			#[GaussianNB(), "GaussianNB"],
-			#[MultinomialNB(), "MultinomialNB"],
-			
-			# neighbors
-			#[KNeighborsClassifier(), "KNeighborsClassifier"], # no way to return feature importance
-			# TODO this one creates issues
-			#[NearestCentroid(), "NearestCentroid"], # it does not have some necessary methods, apparently
-			#[RadiusNeighborsClassifier(), "RadiusNeighborsClassifier"],
-			
 			# tree
-			#[DecisionTreeClassifier(), "DecisionTreeClassifier"],
-			#[ExtraTreeClassifier(), "ExtraTreeClassifier"],
 			[AdaBoostClassifier(n_estimators=300), "AdaBoostClassifier(n_estimators=300)"],
-            [ExtraTreesClassifier(n_estimators=300), "ExtraTreesClassifier(n_estimators=300)"],
-            [KNeighborsClassifier(), "KNeighborsClassifier"],
-            #[LassoCV(), "LassoCV"],
+			[ExtraTreesClassifier(n_estimators=300), "ExtraTreesClassifier(n_estimators=300)"],
+			[KNeighborsClassifier(), "KNeighborsClassifier"],
 			[MLPClassifier(), "MLPClassifier"],
 			[LassoCV(), "LassoCV"]
-			]
-	
-	# this is just a hack to check a few things
-	#classifierList = [
-	#		[RandomForestClassifier(), "RandomForestClassifier"]
-	#		]
+		]
 
-	print("Loading dataset...")
-	X, y = loadDataset(output)
-	
-	print(len(X))
-	print(len(X[0]))
-	print(len(y))
-
-	
 	labels=np.max(y)+1
 	# prepare folds
 	skf = StratifiedKFold(n_splits=numberOfFolds, shuffle=True)
@@ -153,9 +79,8 @@ def runFeatureReduce(numberOfFolds, output) :
 	
 	# iterate over all classifiers
 	classifierIndex = 0
-	
-	
-	
+
+	classifierResults = []
 	
 	for originalClassifier, classifierName in classifierList :
 		
@@ -212,17 +137,27 @@ def runFeatureReduce(numberOfFolds, output) :
 			F1scoreTest = f1_score(y_test, y_new, average='weighted')
 			F1score.append(F1scoreTest)
 
-		pd.DataFrame(cMatrix).to_csv(os.path.join(output, "best", "cMatrix"+str(classifierIndex)+".csv"), header=None, index =None)
+		if verbose:
+			pd.DataFrame(cMatrix).to_csv(os.path.join(output, "best", "cMatrix"+str(classifierIndex)+".csv"), header=None, index =None)
+
 		classifierIndex+=1
-		line ="%s \t %.4f \t %.4f \t %.4f \t %.4f\n" % (classifierName, np.mean(classifierPerformance), np.std(classifierPerformance), np.mean(F1score), np.std(F1score))
-		
-		
-		print(line)
-		fo = open(os.path.join(output, "best", "results.txt"), 'a')
-		fo.write( line )
-		fo.close()
+
+		classifierResults.append({
+			"classifier": classifierName,
+			"mean": np.mean(classifierPerformance),
+			"std": np.std(classifierPerformance),
+			"mean_F1": np.mean(F1score), 
+			"std_F1": np.std(F1score)
+		})
+
+	if verbose:
+		with open( os.path.join(output, "best", "results.txt"), "w" ) as fp :
+			for result in classifierResults :
+				line = "%s \t %.4f \t %.4f \t %.4f \t %.4f\n" % (result["classifier"], result["mean"], result["std"], result["mean_F1"], result["std_F1"])
+				print(line)
+				fp.write(line)
 	
-	return
+	return classifierResults
 
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser(description="Run multiple classifiers based on the best run")
@@ -230,4 +165,10 @@ if __name__ == "__main__" :
 	parser.add_argument('--output', type=str, default=".", help='Path to the output folder (default: .)')
 	args = parser.parse_args()
 
-	sys.exit( runFeatureReduce(args.folds, args.output) )
+	print("Loading dataset...")
+	X, y = loadDataset(args.output)
+	print(len(X))
+	print(len(X[0]))
+	print(len(y))
+
+	runFeatureReduce(X, y, args.folds, args.output)
