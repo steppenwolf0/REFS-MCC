@@ -12,11 +12,10 @@ authors = [
     { name = "Brigitta Varga" },
     { name = "David Rojas-Velazquez"}
 ]
-license = { text = "MIT" }
+license = "MIT"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
@@ -41,6 +40,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+]
+docs = [
+  "sphinx>=8",
+  "sphinx-rtd-theme>=3",
+  "sphinx-copybutton>=0.5.2",
 ]
 
 [project.scripts]

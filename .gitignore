@@ -5,3 +5,6 @@ best/
 run*/
 sumfig.pdf
 sumfig.png
+
+build/
+docs/build
