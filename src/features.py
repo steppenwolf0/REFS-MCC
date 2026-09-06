@@ -5,68 +5,27 @@ import numpy as np
 import os
 import sys
 
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import BaggingClassifier
-from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.ensemble import RandomForestClassifier
-
-from sklearn.linear_model import ElasticNet
-from sklearn.linear_model import ElasticNetCV
-from sklearn.linear_model import Lasso
-from sklearn.linear_model import LassoCV
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import LogisticRegressionCV
-from sklearn.linear_model import PassiveAggressiveClassifier
-from sklearn.linear_model import RidgeClassifier
-from sklearn.linear_model import RidgeClassifierCV
-from sklearn.linear_model import SGDClassifier
-
-from sklearn.multiclass import OneVsOneClassifier 
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.multiclass import OutputCodeClassifier
-
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.naive_bayes import GaussianNB
-from sklearn.naive_bayes import MultinomialNB 
-
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neighbors import NearestCentroid
-from sklearn.neighbors import RadiusNeighborsClassifier
-
-from sklearn.svm import SVC
-
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.tree import ExtraTreeClassifier
-
 # used for normalization
 from sklearn.preprocessing import StandardScaler
 
 # used for cross-validation
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import matthews_corrcoef
 
-from pandas import read_csv
+from pandas import DataFrame, read_csv
 import pandas as pd 
 
-def loadDatasetOriginal(run, data, runFolderPath) :
-	
-	# data used for the predictions
+def loadDatasetOriginal(data: str) :
 	dfData = read_csv(os.path.join(data, "data_0.csv"), header=None, sep=',')
 	dfLabels = read_csv(os.path.join(data, "labels.csv"), header=None)
 	biomarkers = read_csv(os.path.join(data, "features_0.csv"), header=None)
-
-	# create folder
-	folderName = os.path.join(runFolderPath, f"run{run}")
-	if not os.path.exists(folderName) : os.makedirs(folderName)
-
-	pd.DataFrame(dfData.values).to_csv(os.path.join(folderName, "data_0.csv"), header=None, index =None)
-	pd.DataFrame(biomarkers.values.ravel()).to_csv(os.path.join(folderName, "features_0.csv"), header=None, index =None)
-	pd.DataFrame(dfLabels.values.ravel()).to_csv(os.path.join(folderName, "labels.csv"), header=None, index =None)
 	return dfData.values, dfLabels.values.ravel(), biomarkers.values.ravel() # to have it in the format that the classifiers like
 
+def saveDatasetAsData0(X: np.ndarray, y: np.ndarray, biomarkerNames: np.ndarray, folderName: str) :
+	pd.DataFrame(X).to_csv(os.path.join(folderName, "data_0.csv"), header=None, index=None)
+	pd.DataFrame(biomarkerNames).to_csv(os.path.join(folderName, "features_0.csv"), header=None, index=None)
+	pd.DataFrame(y).to_csv(os.path.join(folderName, "labels.csv"), header=None, index=None)
 
-def loadDataset(globalIndex, run, runFolderPath) :
+def loadDataset(globalIndex: int, run: int, runFolderPath: str) :
 	
 	# data used for the predictions
 	dfData = read_csv(os.path.join(runFolderPath, f"run{run}", f"data_{globalIndex}.csv"), header=None, sep=',')
@@ -84,7 +43,6 @@ def relativeFeatureImportance(classifier) :
 
 	# the simplest case: the classifier already has a method that returns relative importance of features
 	if hasattr(classifier, "feature_importances_") :
-
 		orderedFeatures = zip(classifier.feature_importances_ , range(0, len(classifier.feature_importances_)))
 		orderedFeatures = sorted(orderedFeatures, key = lambda x : x[0], reverse=True)
 	
@@ -164,6 +122,9 @@ def relativeFeatureImportance(classifier) :
 				for index, values in enumerate(relativeFeatures) :
 					value, feature = values
 					featureFrequency[feature] += 1/(1+index)
+		else:
+			print("The classifier does not have any way to return a list with the relative importance of the features")
+			return np.array(orderedFeatures)
 			
 		# finally, let's sort
 		orderedFeatures = [ (featureFrequency[feature], feature) for feature in range(0, len(featureFrequency)) ]
@@ -174,80 +135,25 @@ def relativeFeatureImportance(classifier) :
 
 	return np.array(orderedFeatures)
 
-def featureSelection(globalIndex, variableSize,run, numberOfFolds, data, output) :
-	
-	classifierList = [
-			# ensemble
-			#[AdaBoostClassifier(), "AdaBoostClassifier"],
-			#[AdaBoostClassifier(n_estimators=300), "AdaBoostClassifier(n_estimators=300)"],
-			#[AdaBoostClassifier(n_estimators=1500), "AdaBoostClassifier(n_estimators=1500)"],
-			#[BaggingClassifier(), "BaggingClassifier"],
-			
-			[GradientBoostingClassifier(n_estimators=300), "GradientBoostingClassifier(n_estimators=300)"],
-			[RandomForestClassifier(n_estimators=300), "RandomForestClassifier(n_estimators=300)"],
-			[LogisticRegression(), "LogisticRegression"],
-			[PassiveAggressiveClassifier(),"PassiveAggressiveClassifier"],
-			[SGDClassifier(), "SGDClassifier"],
-			[SVC(kernel='linear'), "SVC(linear)"],
-			[RidgeClassifier(), "RidgeClassifier"],
-			[BaggingClassifier(n_estimators=300), "BaggingClassifier(n_estimators=300)"],
-			#[ExtraTreesClassifier(), "ExtraTreesClassifier"],
-			#[ExtraTreesClassifier(n_estimators=300), "ExtraTreesClassifier(n_estimators=300)"],
-			#[GradientBoostingClassifier(), "GradientBoostingClassifier"], # features_importances_
-			#[GradientBoostingClassifier(n_estimators=300), "GradientBoostingClassifier(n_estimators=300)"],
-			#[GradientBoostingClassifier(n_estimators=1000), "GradientBoostingClassifier(n_estimators=1000)"],
-			#[RandomForestClassifier(), "RandomForestClassifier"],
-			#[RandomForestClassifier(n_estimators=300), "RandomForestClassifier(n_estimators=300)"],
-			#[RandomForestClassifier(n_estimators=1000), "RandomForestClassifier(n_estimators=1000)"], # features_importances_
+def getMostImportantFeatures(biomarkerNames: np.ndarray, numberOfTopFeatures: int, numberOfFolds: int, topFeatures: dict[int, int]):
+    # transform dictionary into list
+	listOfTopFeatures = [ (key, topFeatures[key]) for key in topFeatures ]
+	listOfTopFeatures = sorted( listOfTopFeatures, key = lambda x : x[1], reverse=True )
 
-			# linear
-			#[ElasticNet(), "ElasticNet"],
-			#[ElasticNetCV(), "ElasticNetCV"],
-			#[Lasso(), "Lasso"],
-			#[LassoCV(), "LassoCV"],
-			#[LogisticRegression(), "LogisticRegression"], # coef_
-			#[LogisticRegressionCV(), "LogisticRegressionCV"],
-			#[PassiveAggressiveClassifier(), "PassiveAggressiveClassifier"], # coef_
-			#[RidgeClassifier(), "RidgeClassifier"], # coef_
-			#[RidgeClassifierCV(), "RidgeClassifierCV"],
-			#[SGDClassifier(), "SGDClassifier"], # coef_
-			#[SVC(kernel='linear'), "SVC(linear)"], # coef_, but only if the kernel is linear...the default is 'rbf', which is NOT linear
-			
-			# naive Bayes
-			#[BernoulliNB(), "BernoulliNB"],
-			#[GaussianNB(), "GaussianNB"],
-			#[MultinomialNB(), "MultinomialNB"],
-			
-			# neighbors
-			#[KNeighborsClassifier(), "KNeighborsClassifier"], # no way to return feature importance
-			# TODO this one creates issues
-			#[NearestCentroid(), "NearestCentroid"], # it does not have some necessary methods, apparently
-			#[RadiusNeighborsClassifier(), "RadiusNeighborsClassifier"],
-			
-			# tree
-			#[DecisionTreeClassifier(), "DecisionTreeClassifier"],
-			#[ExtraTreeClassifier(), "ExtraTreeClassifier"],
+	tempIndex=0
+	idsRedRows = []
+	for feature, frequency in listOfTopFeatures :
+		if tempIndex<numberOfTopFeatures:
+			idsRedRows.append([ biomarkerNames[feature], float(frequency/numberOfFolds) ])
+		tempIndex=tempIndex+1
 
-			]
-	
-	# this is just a hack to check a few things
-	#classifierList = [
-	#	   [RandomForestClassifier(), "RandomForestClassifier"]
-	#	   ]
+	idsRed: DataFrame = pd.DataFrame(idsRedRows)
+	return idsRed
 
-	print("Loading dataset...")
-	if (globalIndex==0):
-		X, y, biomarkerNames = loadDatasetOriginal(run, data, output)
-	else:
-		X, y, biomarkerNames = loadDataset(globalIndex, run, output)
-
-
-	
-	numberOfTopFeatures=int(variableSize)
-	# create folder
-	folderName = os.path.join(output, f"run{run}")
-	if not os.path.exists(folderName) : os.makedirs(folderName)
-	
+def featureSelection(X: np.ndarray, y: np.ndarray, biomarkerNames: np.ndarray, 
+					 numberOfTopFeatures: int, numberOfFolds: int, 
+					 classifierList, criterion, 
+					 verbose: int, folderName: str) :
 	# prepare folds
 	skf = StratifiedKFold(n_splits=numberOfFolds, shuffle=True)
 	indexes = [ (training, test) for training, test in skf.split(X, y) ]
@@ -255,11 +161,10 @@ def featureSelection(globalIndex, variableSize,run, numberOfFolds, data, output)
 	# this will be used for the top features
 	topFeatures = dict()
 	
+	classifierResults = []
+	globalAccuracy=0
+
 	# iterate over all classifiers
-	classifierIndex = 0
-	
-	globalAccuracy=0;
-	
 	for originalClassifier, classifierName in classifierList :
 		
 		print("\nClassifier " + classifierName)
@@ -289,11 +194,9 @@ def featureSelection(globalIndex, variableSize,run, numberOfFolds, data, output)
 			for i in range(0, len(y_new_train)):
 				y_new_train[i]=round(y_new_train[i])
 				
-			scoreTest = matthews_corrcoef(y_test, y_new_test)
-			scoreTraining = matthews_corrcoef(y_train, y_new_train)
+			scoreTest = criterion(y_test, y_new_test)
+			scoreTraining = criterion(y_train, y_new_train)
 				
-			
-			
 			print("\ttraining: %.4f, test: %.4f" % (scoreTraining, scoreTest))
 			classifierPerformance.append( scoreTest )
 			
@@ -312,42 +215,34 @@ def featureSelection(globalIndex, variableSize,run, numberOfFolds, data, output)
 					classifierTopFeatures[ feature ] += 1
 				else :
 					classifierTopFeatures[ feature ] = 1
-			
-		line ="%s\t%.4f\t%.4f\n" % (classifierName, np.mean(classifierPerformance), np.std(classifierPerformance))
-		
+
+		classifierResults.append({
+			"classifier": classifierName,
+			"mean": np.mean(classifierPerformance),
+			"std": np.std(classifierPerformance),
+		})
+
 		globalAccuracy=globalAccuracy+np.mean(classifierPerformance)
 		
-		print(line)
-		fo = open(os.path.join(folderName, "results.txt"), 'a')
-		fo.write( line )
-		fo.close()
-		# save most important features for the classifier
-		with open( os.path.join(folderName, classifierName + ".csv"), "w" ) as fp :
-	
-			fp.write("feature,frequencyInTop" + str(numberOfTopFeatures) + "\n")
-			
-			# transform dictionary into list
-			listOfClassifierTopFeatures = [ (key, classifierTopFeatures[key]) for key in classifierTopFeatures ]
-			listOfClassifierTopFeatures = sorted( listOfClassifierTopFeatures, key = lambda x : x[1], reverse=True )
-			
-			for feature, frequency in listOfClassifierTopFeatures :
-				fp.write( str(biomarkerNames[feature]) + "," + str(float(frequency/numberOfFolds)) + "\n")
+		if verbose:
+			idsClassifier = getMostImportantFeatures(biomarkerNames, numberOfTopFeatures, numberOfFolds, classifierTopFeatures)
+
+			if idsClassifier.values.any():
+				# save most important features for the classifier
+				idsClassifier.columns = ["feature"] + [f"frequencyInTop{numberOfTopFeatures}"]
+				idsClassifier.to_csv(os.path.join(folderName, f"{classifierName}.csv"), index=False)
+
+	if verbose:
+		# save the results of all classifiers
+
+		with open( os.path.join(folderName, "results.txt"), "a" ) as fp :
+			for result in classifierResults :
+				fp.write("%s\t%.4f\t%.4f\n" % (result["classifier"], result["mean"], result["std"]))
+					
+	globalAccuracy = globalAccuracy / len(classifierList)
 	
 	# save most important features overall
-	with open( os.path.join(folderName, "global_"+str(int(globalIndex))+".csv"), "w" ) as fp :
-		
-		fp.write("feature,frequencyInTop" + str(numberOfTopFeatures) + "\n")
-		
-		# transform dictionary into list
-		listOfTopFeatures = [ (key, topFeatures[key]) for key in topFeatures ]
-		listOfTopFeatures = sorted( listOfTopFeatures, key = lambda x : x[1], reverse=True )
-		
-		tempIndex=0
-		for feature, frequency in listOfTopFeatures :
-			if tempIndex<numberOfTopFeatures:
-				fp.write( str(biomarkerNames[feature]) + "," + str(float(frequency/numberOfFolds)) + "\n")
-			tempIndex=tempIndex+1
+	idsReduced = getMostImportantFeatures(biomarkerNames, numberOfTopFeatures, numberOfFolds, topFeatures)
 
-	globalAccuracy=globalAccuracy/8
-	return globalAccuracy
+	return globalAccuracy, idsReduced
 

@@ -8,36 +8,39 @@ from classifiersMulti import *
 
 from pandas import read_csv
 
-def fakeBootStrapper(runs, numberOfFolds, output = ".") :
+def fakeBootStrapper(runs, numberOfFolds, output = ".", classifierList = None) :
 	# create folder
 	folderName = os.path.join(output, "best")
 	if not os.path.exists(folderName) : os.makedirs(folderName)
 
 	orig_stdout = sys.stdout
-	f = open(os.path.join(output, "best", "out.txt"), 'w')
-	sys.stdout = f
+	f_out = open(os.path.join(output, "best", "out.txt"), 'w')
+	sys.stdout = f_out
 	
 	directory= f"run{0}"
 	f=open(os.path.join(output, directory, "results.txt"), "r")
+
+	numberOfClassifiers=8
 	fl=f.readlines()
-	blocks=int(len(fl)/8)
+	blocks=int(len(fl)/numberOfClassifiers)
 	print(blocks)
+
 	results=np.zeros((blocks,runs+1))
+
 	for j in range(0,runs):
 		directory= f"run{j}"
 		f=open(os.path.join(output, directory, "results.txt"), "r")
 		fl =f.readlines()
-		blocks=int(len(fl)/8)
+		blocks=int(len(fl)/numberOfClassifiers)
 		count=0
 		value=0
-		variables=np.zeros(blocks)
 		accuracy=np.zeros(blocks)
 		indexResults=0
 		for x in fl:
 			a=x.split("\t")
-			value=value+float(a[1])/8.0
+			value=value+float(a[1])/numberOfClassifiers
 			count=count+1
-			if (count==8):
+			if (count==numberOfClassifiers):
 				accuracy[indexResults]=value
 				value=0
 				count=0
@@ -46,12 +49,9 @@ def fakeBootStrapper(runs, numberOfFolds, output = ".") :
 		
 		for i in range (0,blocks):
 			dfFeats = (read_csv(os.path.join(output, directory, f"features_{i}.csv"), header=None)).values.ravel() 
-			variables[i]=len(dfFeats)
+			results[i,0]=len(dfFeats)
 			results[i,j+1]=accuracy[i]
-			results[i,0]=variables[i]
-		
-		
-	
+			
 	pd.DataFrame(results).to_csv(os.path.join(output, "best", "sum.csv"), header=None, index =None)
 	
 	bestVal=np.zeros(runs)
@@ -97,21 +97,29 @@ def fakeBootStrapper(runs, numberOfFolds, output = ".") :
 	runBest=int(np.argmax(bestVal))
 	indexBest=int(bestPos[np.argmax(bestVal)])
 	
-	
-	
 	# data used for the predictions
 	dfData = read_csv(os.path.join(output, f"run{runBest}", f"data_{indexBest}.csv"), header=None, sep=',')
-	dfLabels = read_csv(os.path.join(output, f"run{runBest}", "labels.csv"), header=None)
 	biomarkers = read_csv(os.path.join(output, f"run{runBest}", f"features_{indexBest}.csv"), header=None)
-	
-	pd.DataFrame(dfData.values).to_csv(os.path.join(output, "best", "data_0.csv"), header=None, index =None)
-	pd.DataFrame(biomarkers.values.ravel()).to_csv(os.path.join(output, "best", "features_0.csv"), header=None, index =None)
-	pd.DataFrame(dfLabels.values.ravel()).to_csv(os.path.join(output, "best", "labels.csv"), header=None, index =None)
-	
-	runFeatureReduce(numberOfFolds, output)
+	dfLabels = read_csv(os.path.join(output, f"run{runBest}", "labels.csv"), header=None)
+
+	X = dfData.values
+	y = dfLabels.values.ravel()
+	biomarkerNames = biomarkers.values.ravel()
+
+	evaluate(X, y, biomarkerNames, numberOfFolds, output, classifierList = classifierList)
+
 	sys.stdout = orig_stdout
-	f.close()
+	f_out.close()
 	return
+
+def evaluate(X, y, biomarkerNames, numberOfFolds, output, verbose = 1, classifierList = None):
+	if verbose:
+		pd.DataFrame(X).to_csv(os.path.join(output, "best", "data_0.csv"), header=None, index =None)
+		pd.DataFrame(y).to_csv(os.path.join(output, "best", "labels.csv"), header=None, index =None)
+		pd.DataFrame(biomarkerNames).to_csv(os.path.join(output, "best", "features_0.csv"), header=None, index=None)
+
+	classifierResults = runFeatureReduce(X, y, numberOfFolds, output, verbose, classifierList = classifierList)
+	return classifierResults
 
 if __name__ == "__main__" :
 	parser = argparse.ArgumentParser(description="Run REFS-MCC - part 2")
@@ -123,5 +131,6 @@ if __name__ == "__main__" :
 	runs=args.totalRuns
 	numberOfFolds=args.folds
 	output=args.output
+	classifierList = None
 
-	sys.exit( fakeBootStrapper(runs, numberOfFolds, output) )
+	sys.exit( fakeBootStrapper(runs, numberOfFolds, output, classifierList = classifierList) )
