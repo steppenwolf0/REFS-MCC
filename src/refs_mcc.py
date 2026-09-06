@@ -34,15 +34,18 @@ class REFS_MCC(SelectorMixin):
         self.idsReduced = idsReduced
         self.n_features_in_ = X.shape[1]
         self.n_features_ = len(idsReduced)
-        self.support_ = np.array([True if i in idsReduced else False for i in range(self.n_features_in_)])
+
+        # get the first column of idsReduced as a 1D array
+        featureIds = idsReduced[:, 0]
+        self.support_ = np.array([True if i in featureIds else False for i in range(self.n_features_in_)])
 
         # use resultsFeatures to rank the features, everything that is in idsReduced gets a 1, 
         # the ones in resultsFeatures starts from 2 and goes up based on the count in resultsFeatures (the more the lower the rank)
         # the rest of the features that are not in resultsFeatures get a rank of len(resultsFeatures) + 2
-        resultFeaturesWithoutIdsReduced = np.array([[feature, frequency] for feature, frequency in resultsFeatures[:, 0:2] if feature not in idsReduced])
+        resultFeaturesWithoutIdsReduced = np.array([[feature, frequency] for feature, frequency in resultsFeatures[:, 0:2] if feature not in featureIds])
         resultFeaturesWithoutIdsReduced = resultFeaturesWithoutIdsReduced[resultFeaturesWithoutIdsReduced[:, 1].argsort()[::-1]] # order by frequency in descending order
         ranking_dict = {feature: rank for rank, feature in enumerate(resultFeaturesWithoutIdsReduced[:, 0], start=2)}
-        self.ranking_ = np.array([1 if i in idsReduced else ranking_dict.get(i, len(resultsFeatures) + 2) for i in range(self.n_features_in_)])
+        self.ranking_ = np.array([1 if i in featureIds else ranking_dict.get(i, len(resultsFeatures) + 2) for i in range(self.n_features_in_)])
 
     def _get_support_mask(self):
         if self.support_ is None:
